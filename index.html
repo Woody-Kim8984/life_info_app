@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>생활정보 통합 조회</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f1f0ec;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --border: rgba(11,11,11,0.10);
+  --accent: #2a78d6;
+  --accent-ink: #1c5cab;
+  --accent-soft: #e3eefc;
+  --good: #0ca30c;
+  --good-text: #006300;
+  --warning: #fab219;
+  --warning-soft: #fff4d6;
+  --critical: #d03b3b;
+  --critical-text: #b42b2b;
+  --critical-soft: #fbe9e9;
+  --shadow: 0 1px 2px rgba(11,11,11,0.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #242422;
+    --text: #ffffff;
+    --text-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --border: rgba(255,255,255,0.10);
+    --accent: #3987e5;
+    --accent-ink: #86b6ef;
+    --accent-soft: #15263d;
+    --good-text: #0ca30c;
+    --warning-soft: #33290f;
+    --critical-text: #e66767;
+    --critical-soft: #361a1a;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #242422;
+  --text: #ffffff;
+  --text-2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --border: rgba(255,255,255,0.10);
+  --accent: #3987e5;
+  --accent-ink: #86b6ef;
+  --accent-soft: #15263d;
+  --good-text: #0ca30c;
+  --warning-soft: #33290f;
+  --critical-text: #e66767;
+  --critical-soft: #361a1a;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--page);
+  color: var(--text);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+a { color: var(--accent-ink); }
+button, input, select, textarea { font: inherit; color: inherit; }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 16px; }
+
+/* Header */
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 0 12px; }
+.top h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+.top p { margin: 4px 0 0; color: var(--text-2); font-size: 13px; }
+.icon-btn { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 6px 10px; cursor: pointer; color: var(--text-2); white-space: nowrap; }
+.icon-btn:hover { color: var(--text); }
+
+/* KPI tiles */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 10px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); min-width: 0; text-align: left; }
+button.kpi { cursor: pointer; }
+button.kpi:hover { border-color: var(--accent); }
+.kpi-label, .kpi-value, .kpi-sub { display: block; }
+.kpi-label { font-size: 12px; color: var(--text-2); }
+.kpi-value { font-size: 24px; font-weight: 600; margin-top: 2px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kpi-value small { font-size: 13px; font-weight: 500; color: var(--text-2); margin-left: 2px; }
+.kpi-sub { font-size: 12px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.delta-up { color: var(--critical-text); }
+.delta-down { color: var(--good-text); }
+
+/* Location bar */
+.locbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 16px; }
+.locbar strong { font-size: 13px; font-weight: 600; margin-right: 4px; }
+.locbar .msg { font-size: 12px; color: var(--muted); }
+
+/* Controls */
+input[type=text], input[type=number], input[type=date], select, textarea {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; min-width: 0; width: 100%;
+}
+.locbar select { width: auto; }
+.locbar input[type=number] { width: 118px; }
+textarea { min-height: 72px; resize: vertical; }
+input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.btn { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 7px 14px; cursor: pointer; white-space: nowrap; }
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-sm { padding: 3px 9px; font-size: 12px; border-radius: 6px; }
+
+/* Layout */
+.layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; align-items: start; }
+nav.side { position: sticky; top: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 8px; max-height: calc(100vh - 24px); overflow: auto; }
+.nav-group { font-size: 11px; font-weight: 600; color: var(--muted); padding: 10px 8px 4px; letter-spacing: 0.02em; }
+.nav-item { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; background: none; border: 0; border-radius: 8px; padding: 7px 10px; cursor: pointer; color: var(--text-2); }
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+.nav-item .cnt { font-size: 11px; color: var(--muted); }
+.nav-mobile { display: none; margin-bottom: 12px; }
+main { min-width: 0; }
+
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; min-width: 0; }
+.svc-head h2 { margin: 0; font-size: 18px; font-weight: 650; }
+.svc-head p { margin: 2px 0 12px; color: var(--text-2); font-size: 13px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.tab { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 5px 12px; cursor: pointer; color: var(--text-2); font-size: 13px; }
+.tab:hover { color: var(--text); }
+.tab.active { background: var(--text); color: var(--surface); border-color: var(--text); }
+.op-note { font-size: 12px; color: var(--text-2); background: var(--surface-2); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; }
+
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px 12px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+.field > label, .field > .flabel { font-size: 12px; color: var(--text-2); font-weight: 500; }
+.field .req { color: var(--critical-text); }
+.field .hint { font-size: 11px; color: var(--muted); }
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; padding-top: 4px; }
+.check input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+.checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.form-actions { display: flex; gap: 8px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+.form-actions .spacer { flex: 1; }
+
+/* Results */
+.res-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 12px; color: var(--text-2); }
+.pill { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 9px; font-size: 12px; font-weight: 600; }
+.pill.ok { background: rgba(12,163,12,0.12); color: var(--good-text); }
+.pill.err { background: var(--critical-soft); color: var(--critical-text); }
+.reqline { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12px; color: var(--text-2); overflow-wrap: anywhere; flex: 1 1 260px; min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.chip { background: var(--surface-2); border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--text-2); }
+.chip b { color: var(--text); font-weight: 600; margin-left: 4px; }
+button.chip { border: 1px solid var(--border); cursor: pointer; }
+button.chip:hover { border-color: var(--accent); color: var(--text); }
+.notebox { font-size: 12px; color: var(--text-2); border-left: 3px solid var(--grid); padding: 4px 10px; margin-bottom: 12px; }
+
+.entity { display: flex; gap: 14px; align-items: flex-start; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+.entity.highlight { border-color: var(--accent); background: var(--accent-soft); }
+.entity img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; background: var(--surface-2); flex: none; }
+.entity .ent-kicker { font-size: 12px; color: var(--text-2); }
+.entity .ent-title { font-size: 16px; font-weight: 600; margin: 2px 0 6px; overflow-wrap: anywhere; }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 14px; font-size: 13px; margin: 0; }
+.kv dt { color: var(--text-2); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+
+.list-block { margin-bottom: 18px; }
+.list-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.list-title h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.list-title .count { font-size: 12px; color: var(--muted); }
+.list-title input { width: 180px; margin-left: auto; padding: 4px 8px; font-size: 12px; }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--grid); vertical-align: middle; white-space: nowrap; }
+tr:last-child > td { border-bottom: 0; }
+th { font-size: 12px; font-weight: 600; color: var(--text-2); background: var(--surface-2); white-space: nowrap; cursor: pointer; user-select: none; position: sticky; top: 0; }
+th.noclick { cursor: default; }
+th .arrow { color: var(--muted); font-size: 10px; margin-left: 3px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.wrap-text { white-space: normal; min-width: 160px; max-width: 360px; overflow-wrap: anywhere; }
+tr.sub > td { white-space: normal; }
+tbody tr:hover > td { background: var(--surface-2); }
+td.acts { white-space: nowrap; }
+td.acts .btn-sm { margin-right: 4px; }
+tr.sub > td { background: var(--page); padding: 12px; }
+.thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; background: var(--surface-2); display: block; }
+.muted { color: var(--muted); }
+.yes { color: var(--good-text); font-weight: 600; }
+.badge { display: inline-block; border-radius: 6px; padding: 1px 7px; font-size: 11px; font-weight: 600; margin: 1px 3px 1px 0; background: var(--surface-2); color: var(--text-2); white-space: nowrap; }
+.badge.crit { background: var(--critical-soft); color: var(--critical-text); }
+.badge.good { background: rgba(12,163,12,0.12); color: var(--good-text); }
+.seat { display: inline-flex; align-items: center; gap: 8px; }
+.meter { width: 56px; height: 6px; border-radius: 3px; background: var(--accent-soft); overflow: hidden; }
+.meter > span { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.more { margin-top: 8px; }
+.empty-line { font-size: 12px; color: var(--muted); margin: -6px 0 14px; }
+
+.state { text-align: center; padding: 34px 12px; color: var(--text-2); }
+.state .big { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.spinner { width: 26px; height: 26px; border: 3px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%; margin: 0 auto 12px; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.errbox { border: 1px solid var(--critical); background: var(--critical-soft); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+.errbox .etitle { font-weight: 600; color: var(--critical-text); margin-bottom: 4px; }
+.errbox .emsg { font-size: 13px; overflow-wrap: anywhere; }
+.errbox .ewhy { font-size: 13px; margin-top: 8px; color: var(--text); }
+.errbox .ehint { font-size: 12px; margin-top: 4px; color: var(--text-2); }
+.warnbox { border: 1px solid var(--warning); background: var(--warning-soft); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; }
+details.raw { margin-top: 6px; }
+details.raw summary { cursor: pointer; font-size: 12px; color: var(--text-2); }
+details.raw pre { max-height: 420px; overflow: auto; background: var(--page); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+footer { color: var(--muted); font-size: 12px; padding: 16px 0 28px; }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  nav.side { display: none; }
+  .nav-mobile { display: block; }
+  .top h1 { font-size: 19px; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .kpi { padding: 10px 12px; }
+  .kpi-sub { white-space: normal; }
+  .kpi-value { font-size: 19px; }
+  .list-title input { width: 100%; margin-left: 0; }
+  .entity img { width: 64px; height: 64px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>생활정보 통합 조회</h1>
+      <p>다이소·편의점·마트·올리브영 재고, 가격 비교, 맛집, 유가, 영화관 좌석을 한 곳에서 · 데이터: <a href="https://github.com/hmmhmmhm/daiso-mcp" target="_blank" rel="noopener">daiso-mcp</a> 공개 API</p>
+    </div>
+    <button class="icon-btn" id="themeBtn" type="button" title="테마 전환">테마</button>
+  </header>
+
+  <section class="kpis" aria-label="주요 지표">
+    <button class="kpi" type="button" data-fuel="B027"><span class="kpi-label">휘발유 전국 평균</span><span class="kpi-value">—</span><span class="kpi-sub">불러오는 중…</span></button>
+    <button class="kpi" type="button" data-fuel="D047"><span class="kpi-label">경유 전국 평균</span><span class="kpi-value">—</span><span class="kpi-sub">불러오는 중…</span></button>
+    <button class="kpi" type="button" data-fuel="K015"><span class="kpi-label">LPG(부탄) 전국 평균</span><span class="kpi-value">—</span><span class="kpi-sub">불러오는 중…</span></button>
+    <div class="kpi" id="kpiApi"><div class="kpi-label">API 서버</div><div class="kpi-value">—</div><div class="kpi-sub">확인 중…</div></div>
+    <div class="kpi" id="kpiLoc"><div class="kpi-label">기준 위치</div><div class="kpi-value">—</div><div class="kpi-sub"></div></div>
+  </section>
+
+  <section class="locbar" aria-label="기준 위치 설정">
+    <strong>기준 위치</strong>
+    <select id="locPreset" aria-label="위치 프리셋"></select>
+    <input id="locLat" type="number" step="0.0001" aria-label="위도" placeholder="위도">
+    <input id="locLng" type="number" step="0.0001" aria-label="경도" placeholder="경도">
+    <button class="btn" id="locApply" type="button">적용</button>
+    <button class="btn" id="locGeo" type="button">내 위치 사용</button>
+    <span class="msg" id="locMsg">"기준 위치 사용"이 켜진 조회에 위도·경도로 전달됩니다.</span>
+  </section>
+
+  <div class="layout">
+    <nav class="side" id="nav" aria-label="서비스"></nav>
+    <main>
+      <select class="nav-mobile" id="navSelect" aria-label="서비스 선택"></select>
+      <section class="panel" id="opPanel"></section>
+      <section class="panel" id="result" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <footer>
+    데이터는 <a href="https://github.com/hmmhmmhm/daiso-mcp" target="_blank" rel="noopener">hmmhmmhm/daiso-mcp</a>(MIT)의 호스팅 서버 <code>mcp.aka.page</code> REST API를 브라우저에서 직접 호출합니다.
+    실시간 재고·가격·좌석은 매장/극장 사정과 다를 수 있으며, 일부 브랜드는 외부 사이트 차단으로 일시적으로 조회되지 않을 수 있습니다.
+    올리브영·CGV·CU·GS25·롯데마트 조회는 IP당 하루 3,000회로 제한됩니다.
+  </footer>
+</div>
+
+<script>
+'use strict';
+const API = 'https://mcp.aka.page';
+
+// ---------- 공통 사전 ----------
+const FUEL = { B027: '휘발유', D047: '경유', B034: '고급휘발유', C004: '등유', K015: 'LPG(부탄)' };
+const FUEL_OPTS = Object.entries(FUEL);
+const OPINET_AREAS = [['', '전국'], ['01', '서울'], ['02', '경기'], ['03', '강원'], ['04', '충북'], ['05', '충남'], ['06', '전북'], ['07', '전남'], ['08', '경북'], ['09', '경남'], ['10', '부산'], ['11', '제주'], ['14', '대구'], ['15', '인천'], ['16', '광주'], ['17', '대전'], ['18', '울산'], ['19', '세종']];
+const SVC_NAME = { daiso: '다이소', gs25: 'GS25', seveneleven: '세븐일레븐', emart24: '이마트24', cu: 'CU', lottemart: '롯데마트', oliveyoung: '올리브영', megabox: '메가박스', lottecinema: '롯데시네마', cgv: 'CGV', dtryx: '디트릭스', places: '음식점/카페', opinet: '주유소/유가', compare: '가격 비교', feedback: '개발자 요청' };
+const LOC_PRESETS = [
+  ['서울시청', 37.5665, 126.9780], ['강남역', 37.4979, 127.0276], ['홍대입구역', 37.5572, 126.9245], ['잠실역', 37.5133, 127.1001],
+  ['여의도역', 37.5216, 126.9242], ['수원역', 37.2659, 127.0000], ['판교역', 37.3948, 127.1112], ['인천 부평역', 37.4895, 126.7245],
+  ['대전역', 36.3324, 127.4346], ['대구 동성로', 35.8690, 128.5956], ['광주 충장로', 35.1480, 126.9170], ['부산 서면', 35.1578, 129.0600],
+];
+
+const LABELS = {
+  name: '이름', storeName: '매장', storeCode: '매장 코드', goodsName: '상품명', goodsNumber: '상품 번호', productName: '상품명', itemName: '상품명', itemCode: '상품 코드',
+  pluCd: '상품 코드', id: 'ID', code: '코드', productId: '상품 ID', price: '가격', priceToPay: '판매가', originalPrice: '정가', discountRate: '할인율', viewPrice: '판매가',
+  originPrice: '정가', sellPrice: '판매가', currentPrice: '현재가', address: '주소', roadAddress: '도로명 주소', phone: '전화', openTime: '오픈', closeTime: '마감',
+  quantity: '재고', stockQuantity: '재고', realStockQuantity: '재고', pickupStockQuantity: '픽업 재고', deliveryStockQuantity: '배달 재고', distance: '거리', distanceM: '거리',
+  distanceMeters: '거리', distanceKm: '거리', soldOut: '품절', isSoldOut: '품절', isNew: '신상품', pickupAvailable: '픽업', pickupYn: '픽업', o2oRemainQuantity: '매장 재고',
+  o2oStockFlag: '매장 픽업', inStock: '재고', stockStatus: '재고 상태', stockSource: '재고 출처', stockLabel: '재고', remainQuantity: '잔여 수량', category: '분류', link: '링크',
+  brandName: '브랜드', brand: '브랜드', spec: '규격', manufacturer: '제조사', barcode: '바코드', theaterName: '극장', theaterId: '극장 ID', theaterCode: '극장 코드',
+  movieName: '영화', movieId: '영화 ID', movieCode: '영화 코드', playDate: '상영일', startTime: '시작', endTime: '종료', screenName: '상영관', totalSeats: '총 좌석',
+  remainingSeats: '잔여 좌석', bookedSeats: '예매 좌석', rating: '등급', durationMinutes: '러닝타임', releaseDate: '개봉일', cinemaName: '영화관', cinemaCode: '영화관 코드',
+  brandCode: '브랜드 코드', region: '지역', regionCode: '지역 코드', serviceName: '판매처', service: '서비스', message: '메시지', productCode: '유종', tradeDate: '기준일',
+  tradeTime: '기준 시각', diff: '전일 대비', stationId: '주유소 ID', totalCount: '전체', count: '표시', resultCount: '결과', serviceCount: '비교 서비스', onlineStock: '온라인 재고',
+  totalStores: '조회 매장', inStockCount: '재고 있음', outOfStockCount: '재고 없음', notSoldCount: '미판매', stockCheckedCount: '재고 확인', stockUncheckedCount: '재고 미확인',
+  matchedStoreCount: '일치 매장', inStockStoreCount: '재고 매장', totalStoreCount: '전체 매장', totalStockQuantity: '총 재고', totalPages: '전체 페이지',
+  searchedCinemaCount: '조회 영화관', stockAvailable: '재고 조회 가능', hasLocation: '진열 위치 있음', filterRelaxed: '조건 완화', fetchedAt: '조회 시각',
+  deliveryYn: '배달', reserveYn: '예약', stock: '재고', options: '편의시설', storeInventory: '매장 재고', kind: '종류', currency: '통화', type: '유형', severity: '중요도',
+  title: '제목', status: '상태', createdAt: '등록 시각', toolName: '도구', source: '출처', keyword: '검색어', query: '검색어', openYn: '영업', service24h: '24시간',
+  phoneNumber: '전화', tel: '전화', hasMaintenance: '경정비', hasCarWash: '세차장', hasConvenienceStore: '편의점', isKpetroCertified: '품질인증', lpgType: 'LPG',
+  areaCode: '지역 코드', floor: '층', zone: '구역', location: '위치', description: '설명', goodsNo: '상품 번호', salePrice: '판매가', stockQty: '재고', storeAddress: '주소',
+  bizNo: '매장 코드', bizQty: '재고', addressDetail: '상세 주소', openDate: '개점일', goodsNm: '상품명', salePercent: '할인율', goodsInfo: '상품',
+};
+const LIST_TITLES = {
+  products: '상품', stores: '매장', theaters: '극장/지점', movies: '영화', showtimes: '상영 시간표', seats: '회차별 잔여 좌석', timetable: '상영 시간표', cinemas: '영화관',
+  places: '장소', prices: '가격', stations: '주유소', results: '판매처별 상품', errors: '조회 실패한 판매처', keywords: '인기 검색어', items: '항목', locations: '진열 위치',
+  productCandidates: '후보 상품', services: '비교한 판매처', playDates: '상영일', failedCinemas: '조회 실패 영화관',
+  'storeInventory.stores': '매장별 재고', 'nearbyStores.stores': '주변 매장', 'inventory.products': '상품별 재고', 'inventory.stores': '매장별 재고', 'inventory.items': '상품',
+  'pages.items': '카탈로그 페이지', 'issues.items': '이슈 상품', 'exhibitions.items': '기획전',
+};
+const CONTAINER_LABELS = { storeInventory: '매장 재고', inventory: '재고', nearbyStores: '주변 매장', pages: '카탈로그', issues: '이슈', exhibitions: '기획전' };
+const SUMMARY_KEYS = new Set(['totalCount', 'count', 'resultCount', 'serviceCount', 'onlineStock', 'totalStores', 'inStockCount', 'outOfStockCount', 'notSoldCount',
+  'stockCheckedCount', 'matchedStoreCount', 'inStockStoreCount', 'totalStoreCount', 'totalStockQuantity', 'totalPages', 'playDate', 'fetchedAt', 'filterRelaxed',
+  'searchedCinemaCount', 'stockAvailable', 'hasLocation']);
+const NOTE_KEYS = new Set(['note', 'message', 'stockError', 'unavailableReason']);
+const HIDE_TREE = new Set(['raw', 'filters', 'searchParams', 'katec', 'searchOptions', 'options', 'userContext', 'storeFilters']);
+const HIDE_COLS = new Set(['raw', 'lat', 'lng', 'latitude', 'longitude', 'katecX', 'katecY', 'mapx', 'mapy', 'scheduleId', 'screenId', 'regionDetailCode', 'keyword', 'area', 'currency', 'endDate']);
+const NAME_KEYS = ['name', 'goodsName', 'goodsNm', 'productName', 'itemName', 'theaterName', 'cinemaName', 'storeName', 'movieName', 'title'];
+const PRIORITY = ['imageUrl', 'serviceName', 'service', 'productName', 'goodsName', 'goodsNm', 'itemName', 'name', 'storeName', 'cinemaName', 'movieName', 'title',
+  'startTime', 'endTime', 'remainingSeats', 'screenName', 'theaterName', 'playDate', 'rating', 'durationMinutes', 'price', 'priceToPay', 'viewPrice', 'sellPrice', 'originalPrice',
+  'originPrice', 'discountRate', 'diff', 'quantity', 'bizQty', 'stockQuantity', 'realStockQuantity', 'o2oRemainQuantity', 'stockLabel', 'remainQuantity', 'stock', 'storeInventory',
+  'soldOut', 'isSoldOut', 'inStock', 'stockStatus', 'distanceMeters', 'distanceM', 'distanceKm', 'distance', 'brandName', 'category', 'spec', 'manufacturer',
+  'region', 'address', 'roadAddress', 'addressDetail', 'phone', 'openTime', 'closeTime', 'service24h', 'options', 'link', 'message'];
+const PRICE_KEYS = new Set(['price', 'priceToPay', 'originalPrice', 'sellPrice', 'currentPrice', 'viewPrice', 'originPrice', 'salePrice']);
+const OPTION_LABELS = { parking: '주차', ramp: '경사로', elevator: '엘리베이터', cashless: '현금없는 매장', photoSticker: '포토스티커', nameSticker: '네임스티커', simCard: '유심', taxFree: '택스프리', groupOrder: '단체주문', pickup: '픽업' };
+const STOCK_STATUS = { in_stock: '재고 있음', out_of_stock: '품절', not_sold: '미판매', unknown: '확인 불가', low_stock: '소량' };
+
+// ---------- 필드 헬퍼 ----------
+const T = (name, label, o = {}) => ({ name, label, type: 'text', ...o });
+const TA = (name, label, o = {}) => ({ name, label, type: 'textarea', ...o });
+const N = (name, label, def, o = {}) => ({ name, label, type: 'number', default: def, ...o });
+const S = (name, label, options, def, o = {}) => ({ name, label, type: 'select', options, default: def, ...o });
+const B = (name, label, def, o = {}) => ({ name, label, type: 'bool', default: def, ...o });
+const M = (name, label, options, def) => ({ name, label, type: 'multi', options, default: def });
+const D = (name = 'playDate', label = '상영일') => ({ name, label, type: 'date', hint: '비우면 오늘' });
+const LOC = (def = true) => ({ name: '__loc', label: '기준 위치 사용', type: 'loc', default: def });
+const TIMEOUT = N('timeoutMs', '서버 대기(ms)', 15000);
+
+// ---------- 서비스 정의 ----------
+const SERVICES = [
+  { id: 'daiso', group: '쇼핑', name: '다이소', desc: '다이소몰 상품 검색, 매장 찾기, 매장별 재고와 진열 위치', ops: [
+    { id: 'daiso-products', label: '상품 검색', path: '/api/daiso/products',
+      fields: [T('q', '검색어', { required: true, default: '수납박스' }), N('page', '페이지', 1), N('pageSize', '개수', 30)],
+      actions: { products: [
+        { label: '매장 재고', to: 'daiso-inventory', map: r => ({ productId: r.id }) },
+        { label: '상세', to: 'daiso-detail', map: r => ({ productId: r.id }) },
+      ] } },
+    { id: 'daiso-detail', label: '상품 상세', path: '/api/daiso/products/{productId}',
+      fields: [T('productId', '상품 ID', { required: true, default: '1049516' })] },
+    { id: 'daiso-stores', label: '매장 찾기', path: '/api/daiso/stores', note: '검색어 또는 시/도 중 하나는 입력해야 합니다.',
+      fields: [T('keyword', '검색어', { default: '강남' }), T('sido', '시/도', { placeholder: '예: 서울' }), T('gugun', '구/군', { placeholder: '예: 강남구' }), T('dong', '동'), N('limit', '최대 개수', 50)] },
+    { id: 'daiso-inventory', label: '매장 재고', path: '/api/daiso/inventory', note: '기준 위치에서 가까운 매장 순으로 재고를 보여줍니다. 매장 검색어를 넣으면 해당 지역 기준으로 찾습니다.',
+      fields: [T('productId', '상품 ID', { required: true, default: '1049516', hint: '상품 검색 결과의 [매장 재고] 버튼으로 채워집니다' }), T('keyword', '매장 검색어', { placeholder: '예: 강남역' }), LOC(true), N('page', '페이지', 1), N('pageSize', '개수', 30)],
+      actions: { 'storeInventory.stores': [{ label: '진열 위치', to: 'daiso-display', map: (r, d) => ({ productId: d.productId, storeCode: r.storeCode }) }] } },
+    { id: 'daiso-display', label: '진열 위치', path: '/api/daiso/display-location',
+      fields: [T('productId', '상품 ID', { required: true, default: '1049516' }), T('storeCode', '매장 코드', { required: true, default: '10803', hint: '매장 재고 결과의 [진열 위치] 버튼으로 채워집니다' })] },
+  ] },
+  { id: 'compare', group: '쇼핑', name: '가격 비교', desc: '다이소·GS25·세븐일레븐·이마트24 상품 검색 결과를 모아 최저가 후보를 찾습니다', ops: [
+    { id: 'compare-products', label: '상품 가격 비교', path: '/api/compare/products',
+      fields: [T('keyword', '상품명', { required: true, default: '콜라' }),
+        M('services', '비교 대상', [['daiso', '다이소'], ['gs25', 'GS25'], ['seveneleven', '세븐일레븐'], ['emart24', '이마트24']], ['daiso', 'gs25', 'seveneleven', 'emart24']),
+        N('limit', '판매처별 개수', 5)],
+      order: ['results', 'errors'],
+      columns: { results: ['serviceName', 'imageUrl', 'name', 'price'], errors: ['service', 'message'] },
+      fmt: { service: v => esc(SVC_NAME[v] || v) } },
+  ] },
+  { id: 'lottemart', group: '쇼핑', name: '롯데마트', desc: '롯데마트 계열 매장 찾기와 매장별 상품 가격·재고', ops: [
+    { id: 'lottemart-stores', label: '매장 찾기', path: '/api/lottemart/stores',
+      fields: [T('keyword', '검색어', { placeholder: '예: 잠실' }), T('area', '지역', { placeholder: '예: 서울' }),
+        S('brandVariant', '브랜드', [['', '전체'], ['lottemart', '롯데마트'], ['max', '맥스'], ['toysrus', '토이저러스'], ['bottlebunker', '보틀벙커'], ['grandgrocery', '그랑그로서리'], ['mealguru', '밀구루'], ['other', '기타']], ''),
+        LOC(true), N('limit', '최대 개수', 20)],
+      actions: { stores: [{ label: '상품 검색', to: 'lottemart-products', map: r => ({ storeName: r.storeName || r.name, storeCode: r.storeCode || '' }) }] } },
+    { id: 'lottemart-products', label: '상품 검색', path: '/api/lottemart/products', timeout: 90000,
+      note: '매장명 또는 매장 코드가 필요합니다. 페이지 수를 늘리면 결과가 많아지지만 10초 이상 걸릴 수 있습니다.',
+      fields: [T('keyword', '검색어', { required: true, default: '우유' }), T('storeName', '매장명', { default: '잠실점' }), T('storeCode', '매장 코드'), T('area', '지역', { default: '서울' }),
+        N('pageLimit', '페이지 수', 1), S('source', '데이터 소스', [['auto', '자동'], ['zetta', 'zetta'], ['legacy', 'legacy']], 'auto')] },
+  ] },
+  { id: 'gs25', group: '쇼핑', name: 'GS25', desc: 'GS25 매장, 상품, 매장별 재고', ops: [
+    { id: 'gs25-stores', label: '매장 찾기', path: '/api/gs25/stores', fields: [T('keyword', '검색어', { placeholder: '예: 역삼' }), LOC(true), N('limit', '최대 개수', 20)] },
+    { id: 'gs25-products', label: '상품 검색', path: '/api/gs25/products', fields: [T('keyword', '검색어', { required: true, default: '콜라' }), N('limit', '최대 개수', 20)],
+      actions: { products: [{ label: '재고', to: 'gs25-inventory', map: (r, d, p) => ({ keyword: r.itemName || r.name || r.goodsName || p.keyword, itemCode: r.itemCode || r.code || '' }) }] } },
+    { id: 'gs25-inventory', label: '재고 조회', path: '/api/gs25/inventory',
+      fields: [T('keyword', '상품명', { default: '콜라' }), T('itemCode', '상품 코드'), T('storeKeyword', '매장 검색어'), LOC(true), N('storeLimit', '매장 수', 20)] },
+  ] },
+  { id: 'seveneleven', group: '쇼핑', name: '세븐일레븐', desc: '세븐일레븐 상품·매장·재고, 인기 검색어, 카탈로그', ops: [
+    { id: 'se-products', label: '상품 검색', path: '/api/seveneleven/products',
+      fields: [T('query', '검색어', { required: true, default: '콜라' }), N('page', '페이지', 1), N('size', '개수', 20), S('sort', '정렬', [['recommend', '추천순'], ['recent', '최신순'], ['popular', '인기순']], 'recommend')],
+      actions: { products: [{ label: '재고', to: 'se-inventory', map: (r, d, p) => ({ keyword: r.itemName || r.name || r.goodsName || p.query }) }] } },
+    { id: 'se-stores', label: '매장 찾기', path: '/api/seveneleven/stores', fields: [T('keyword', '검색어', { required: true, default: '강남' }), N('limit', '최대 개수', 20)] },
+    { id: 'se-inventory', label: '재고 조회', path: '/api/seveneleven/inventory', timeout: 60000,
+      fields: [T('keyword', '상품명', { required: true, default: '콜라' }), T('storeKeyword', '매장 검색어', { placeholder: '예: 강남' }), N('storeLimit', '매장 수', 20), N('timeoutMs', '서버 대기(ms)', 20000)] },
+    { id: 'se-popwords', label: '인기 검색어', path: '/api/seveneleven/popwords', fields: [T('label', '구분', { default: 'home' })],
+      chipAction: { to: 'se-products', map: s => ({ query: s }) } },
+    { id: 'se-catalog', label: '카탈로그', path: '/api/seveneleven/catalog',
+      fields: [B('includeIssues', '이슈 상품 포함', true), B('includeExhibition', '기획전 포함', true), N('limit', '최대 개수', 20)] },
+  ] },
+  { id: 'cu', group: '쇼핑', name: 'CU', desc: 'CU 매장 찾기와 상품 재고', ops: [
+    { id: 'cu-stores', label: '매장 찾기', path: '/api/cu/stores', fields: [T('keyword', '검색어', { placeholder: '예: 역삼' }), LOC(true), N('limit', '최대 개수', 20)] },
+    { id: 'cu-inventory', label: '재고 조회', path: '/api/cu/inventory',
+      fields: [T('keyword', '상품명', { required: true, default: '콜라' }), T('storeKeyword', '매장 검색어'), LOC(true), N('size', '상품 수', 20),
+        S('searchSort', '정렬', [['recom', '추천순'], ['new', '신상품순'], ['lowPrice', '낮은 가격순'], ['highPrice', '높은 가격순']], 'recom'), B('storeCheck', '주변 매장 재고 확인', true)] },
+  ] },
+  { id: 'emart24', group: '쇼핑', name: '이마트24', desc: '이마트24 매장, 상품, 매장별 재고', ops: [
+    { id: 'e24-stores', label: '매장 찾기', path: '/api/emart24/stores', timeout: 60000,
+      fields: [T('keyword', '검색어'), T('area1', '시/도', { placeholder: '예: 서울특별시' }), T('area2', '구/군', { placeholder: '예: 강남구' }), LOC(true), B('service24h', '24시간 매장만', false), N('limit', '최대 개수', 20)] },
+    { id: 'e24-products', label: '상품 검색', path: '/api/emart24/products', fields: [T('keyword', '검색어', { required: true, default: '콜라' }), N('page', '페이지', 1), N('pageSize', '개수', 10)],
+      actions: { products: [{ label: '재고', to: 'e24-inventory', map: r => ({ pluCd: r.pluCd || '', keyword: r.goodsName || r.name || '' }) }] } },
+    { id: 'e24-inventory', label: '재고 조회', path: '/api/emart24/inventory', timeout: 60000, order: ['stores', 'nearbyStores.stores'], titles: { stores: '매장별 재고' },
+      fields: [T('pluCd', '상품 코드'), T('keyword', '상품명', { default: '콜라' }), T('storeKeyword', '매장 검색어'), T('area1', '시/도'), T('area2', '구/군'), LOC(true), N('storeLimit', '매장 수', 10)] },
+  ] },
+  { id: 'oliveyoung', group: '쇼핑', name: '올리브영', desc: '올리브영 상품, 매장, 주변 매장 재고', ops: [
+    { id: 'oy-products', label: '상품 검색', path: '/api/oliveyoung/products',
+      fields: [T('keyword', '검색어', { required: true, default: '선크림' }), N('page', '페이지', 1), N('size', '개수', 20), B('includeSoldOut', '품절 포함', false)],
+      actions: { products: [{ label: '매장 재고', to: 'oy-inventory', map: r => ({ keyword: r.goodsName }) }] } },
+    { id: 'oy-stores', label: '매장 찾기', path: '/api/oliveyoung/stores', fields: [T('keyword', '검색어', { placeholder: '예: 명동' }), LOC(true), N('limit', '최대 개수', 20)] },
+    { id: 'oy-inventory', label: '매장 재고', path: '/api/oliveyoung/inventory', timeout: 60000, note: '상품별 매장 재고는 요청당 최대 5개 상품까지 확인됩니다. 행의 [펼치기]로 매장별 재고를 볼 수 있습니다.',
+      fields: [T('keyword', '상품명', { required: true, default: '선크림' }), T('storeKeyword', '매장 검색어'), LOC(true), N('size', '상품 수', 10), N('storeLimit', '매장 수', 10), N('stockCheckLimit', '재고 확인 상품 수', 5)] },
+  ] },
+  { id: 'places', group: '생활', name: '음식점/카페', desc: '네이버 지역 검색 기반 주변 음식점·카페 찾기', ops: [
+    { id: 'places-search', label: '주변 찾기', path: '/api/places/search',
+      fields: [T('location', '지역/장소', { required: true, default: '강남역' }), T('keyword', '키워드', { placeholder: '예: 파스타' }),
+        S('category', '분류', [['all', '전체'], ['restaurant', '음식점'], ['cafe', '카페'], ['food', '식당'], ['dessert', '디저트']], 'all'),
+        N('limit', '개수', 5, { hint: '최대 5개' }), S('sort', '정렬', [['random', '정확도순'], ['comment', '리뷰 많은 순']], 'random')] },
+  ] },
+  { id: 'opinet', group: '생활', name: '주유소/유가', desc: '한국석유공사 오피넷 평균 유가, 최저가 주유소, 주변 주유소', ops: [
+    { id: 'opinet-avg', label: '전국 평균', path: '/api/opinet/average', fields: [], fmt: { price: v => won(v, '원/L') } },
+    { id: 'opinet-lowest', label: '최저가 주유소', path: '/api/opinet/lowest',
+      fields: [S('fuelCode', '유종', FUEL_OPTS, 'B027'), S('areaCode', '지역', OPINET_AREAS, ''), N('count', '개수', 10, { hint: '1~20' })],
+      fmt: { price: v => won(v, '원/L') },
+      actions: { stations: [{ label: '상세', to: 'opinet-station', map: r => ({ id: r.stationId }) }] } },
+    { id: 'opinet-around', label: '주변 주유소', path: '/api/opinet/stations/around', preferText: 'location',
+      fields: [LOC(true), T('location', '주소/장소', { placeholder: '입력 시 기준 위치 대신 사용' }), N('radiusMeters', '반경(m)', 3000, { hint: '100~5000' }),
+        S('fuelCode', '유종', FUEL_OPTS, 'B027'), S('sort', '정렬', [['price', '가격순'], ['distance', '거리순']], 'price')],
+      fmt: { price: v => won(v, '원/L') },
+      actions: { stations: [{ label: '상세', to: 'opinet-station', map: r => ({ id: r.stationId }) }] } },
+    { id: 'opinet-station', label: '주유소 상세', path: '/api/opinet/station', fields: [T('id', '주유소 ID', { required: true, default: 'A0000925' })],
+      fmt: { price: v => won(v, '원/L') } },
+  ] },
+  { id: 'megabox', group: '영화', name: '메가박스', desc: '메가박스 지점, 상영 영화·시간표, 회차별 잔여 좌석', ops: [
+    { id: 'mb-theaters', label: '지점 찾기', path: '/api/megabox/theaters',
+      fields: [T('keyword', '지점명', { placeholder: '예: 코엑스' }), LOC(true), D(), T('areaCode', '지역 코드', { default: '11', hint: '11 = 서울' }), N('limit', '개수', 10)],
+      actions: { theaters: [{ label: '시간표', to: 'mb-movies', map: r => ({ theaterId: r.theaterId }) }, { label: '좌석', to: 'mb-seats', map: r => ({ theaterId: r.theaterId }) }] } },
+    { id: 'mb-movies', label: '영화/시간표', path: '/api/megabox/movies', order: ['showtimes', 'movies', 'theaters'],
+      fields: [D(), T('theaterId', '지점 ID'), T('movieId', '영화 ID'), T('keyword', '지점 검색어', { default: '강남' }), LOC(false), T('areaCode', '지역 코드', { default: '11' })],
+      actions: { movies: [{ label: '좌석', to: 'mb-seats', map: (r, d, p) => ({ movieId: r.movieId, theaterId: p.theaterId || (d.resolvedTheater && d.resolvedTheater.theaterId) || '' }) }] } },
+    { id: 'mb-seats', label: '잔여 좌석', path: '/api/megabox/seats',
+      fields: [D(), T('theaterId', '지점 ID'), T('movieId', '영화 ID'), T('keyword', '지점 검색어', { default: '강남' }), LOC(false), T('areaCode', '지역 코드', { default: '11' }), N('limit', '개수', 50)] },
+  ] },
+  { id: 'lottecinema', group: '영화', name: '롯데시네마', desc: '롯데시네마 지점, 상영 영화, 회차별 잔여 좌석', ops: [
+    { id: 'lc-theaters', label: '지점 찾기', path: '/api/lottecinema/theaters', fields: [T('keyword', '지점명', { placeholder: '예: 월드타워' }), LOC(true), D(), N('limit', '개수', 10)],
+      actions: { theaters: [{ label: '영화', to: 'lc-movies', map: r => ({ theaterId: r.theaterId }) }, { label: '좌석', to: 'lc-seats', map: r => ({ theaterId: r.theaterId }) }] } },
+    { id: 'lc-movies', label: '상영 영화', path: '/api/lottecinema/movies', order: ['showtimes', 'movies', 'theaters'],
+      fields: [D(), T('theaterId', '지점 ID'), T('movieId', '영화 ID'), T('keyword', '지점 검색어', { default: '월드타워' }), LOC(false)],
+      actions: { movies: [{ label: '좌석', to: 'lc-seats', map: (r, d, p) => ({ movieId: r.movieId, theaterId: p.theaterId || (d.resolvedTheater && d.resolvedTheater.theaterId) || '' }) }] } },
+    { id: 'lc-seats', label: '잔여 좌석', path: '/api/lottecinema/seats',
+      fields: [D(), T('theaterId', '지점 ID'), T('movieId', '영화 ID'), T('keyword', '지점 검색어', { default: '월드타워' }), LOC(false), N('limit', '개수', 50)] },
+  ] },
+  { id: 'cgv', group: '영화', name: 'CGV', desc: 'CGV 극장, 상영 영화, 시간표와 잔여 좌석', ops: [
+    { id: 'cgv-theaters', label: '극장 찾기', path: '/api/cgv/theaters',
+      fields: [T('keyword', '극장명', { placeholder: '예: 용산' }), T('regionCode', '지역 코드', { placeholder: '01 = 서울' }), LOC(false), D(), N('limit', '개수', 30)],
+      actions: { theaters: [{ label: '영화', to: 'cgv-movies', map: r => ({ theaterCode: r.theaterCode }) }, { label: '시간표', to: 'cgv-timetable', map: r => ({ theaterCode: r.theaterCode }) }] } },
+    { id: 'cgv-movies', label: '상영 영화', path: '/api/cgv/movies', fields: [D(), T('theaterCode', '극장 코드', { default: '0056', hint: '0056 = 강남' }), T('keyword', '극장 검색어'), LOC(false)],
+      actions: { movies: [{ label: '시간표', to: 'cgv-timetable', map: (r, d, p) => ({ movieCode: r.movieCode, theaterCode: p.theaterCode || '' }) }] } },
+    { id: 'cgv-timetable', label: '시간표/좌석', path: '/api/cgv/timetable',
+      fields: [D(), T('theaterCode', '극장 코드', { default: '0056' }), T('movieCode', '영화 코드'), T('keyword', '극장 검색어'), LOC(false), N('limit', '개수', 50)] },
+  ] },
+  { id: 'dtryx', group: '영화', name: '디트릭스', desc: '디트릭스 예매 시스템을 쓰는 독립·예술영화관의 상영작과 잔여 좌석', ops: [
+    { id: 'dt-cinemas', label: '영화관 목록', path: '/api/dtryx/cinemas', fields: [T('keyword', '영화관명'), T('region', '지역', { placeholder: '예: 서울' }), T('brandCode', '브랜드 코드'), N('limit', '개수', 50)],
+      actions: { cinemas: [{ label: '상영작', to: 'dt-movies', map: r => ({ cinemaCode: r.cinemaCode, brandCode: r.brandCode }) }, { label: '좌석', to: 'dt-seats', map: r => ({ cinemaCode: r.cinemaCode, brandCode: r.brandCode }) }] } },
+    { id: 'dt-movies', label: '상영작', path: '/api/dtryx/movies', timeout: 60000, note: '영화관 코드나 영화관명 중 하나가 필요합니다.',
+      fields: [T('cinemaCode', '영화관 코드'), T('keyword', '영화관명', { default: '리좀' }), T('brandCode', '브랜드 코드'), B('includePlayDates', '상영일 목록 포함', false), TIMEOUT],
+      chipAction: { to: 'dt-seats', map: (s, d, p) => ({ playDate: String(s).replace(/^(d{4})(d{2})(d{2})$/, '$1-$2-$3'), cinemaCode: p.cinemaCode || '', keyword: p.keyword || '' }) } },
+    { id: 'dt-seats', label: '잔여 좌석', path: '/api/dtryx/seats', timeout: 90000, note: '영화관을 지정하지 않으면 등록된 모든 영화관을 조회하므로 오래 걸립니다.',
+      fields: [D(), T('cinemaCode', '영화관 코드'), T('keyword', '영화관명', { default: '리좀' }), T('brandCode', '브랜드 코드'), T('region', '지역'), T('movieName', '영화 제목'), N('limit', '개수', 50), TIMEOUT] },
+  ] },
+  { id: 'feedback', group: '기타', name: '개발자 요청', desc: 'daiso-mcp 개발자에게 버그 신고나 기능 요청을 보냅니다', ops: [
+    { id: 'feedback-submit', label: '요청 제출', path: '/api/feedback/requests', method: 'POST', fixed: { source: 'api' }, submitLabel: '제출',
+      confirm: '입력한 내용이 daiso-mcp 개발자의 요청 목록에 실제로 등록됩니다. 제출할까요?',
+      note: '제출하면 daiso-mcp 유지보수자의 요청 DB에 저장됩니다. 개인정보는 적지 마세요.',
+      fields: [S('type', '유형', [['bug', '버그'], ['improvement', '개선'], ['feature', '기능 요청'], ['docs', '문서'], ['other', '기타']], 'bug'),
+        S('severity', '중요도', [['low', '낮음'], ['medium', '보통'], ['high', '높음'], ['critical', '긴급']], 'medium'),
+        S('service', '관련 서비스', [['', '선택 안 함'], ...Object.entries(SVC_NAME)], ''), T('toolName', '도구/기능 이름', { placeholder: '예: gs25_search_products' }),
+        T('title', '제목', { required: true, wide: true }), TA('description', '내용', { required: true }), TA('reproduction', '재현 방법'), TA('expected', '기대 결과'), TA('actual', '실제 결과')] },
+  ] },
+];
+
+// ---------- 상태 ----------
+const OPS = {};
+SERVICES.forEach(s => s.ops.forEach(op => { OPS[op.id] = { svc: s, op }; }));
+const state = { opId: null, values: {}, results: {}, running: {}, loc: { label: '서울시청', lat: 37.5665, lng: 126.9780 }, stats: { calls: 0, fails: 0 }, health: null };
+let REG = [];      // 렌더링된 행/표 레지스트리 (이벤트 위임용)
+let TABLES = {};
+
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem('lifeinfo:' + k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem('lifeinfo:' + k, JSON.stringify(v)); } catch (e) { /* 저장 불가 환경 무시 */ } },
+};
+
+// ---------- 포맷 ----------
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function stripHtml(s) {
+  return String(s == null ? '' : s).replace(/<script[\s\S]*?(<\/script>|$)/gi, ' ').replace(/<style[\s\S]*?(<\/style>|$)/gi, ' ').replace(/<[^>]*>?/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function clip(s, n) { s = String(s); return s.length > n ? s.slice(0, n) + '…' : s; }
+function num(v) { const n = typeof v === 'number' ? v : Number(v); return Number.isFinite(n) ? n : null; }
+function won(v, unit = '원') { const n = num(v); return n == null ? esc(v) : Math.round(n).toLocaleString('ko-KR') + unit; }
+function meters(v) { const n = num(v); if (n == null) return esc(v); return n < 1000 ? Math.round(n) + 'm' : (n / 1000).toFixed(1) + 'km'; }
+function km(v) { const n = num(v); if (n == null) return esc(v); return n < 1 ? Math.round(n * 1000) + 'm' : n.toFixed(1) + 'km'; }
+function ymd(v) { const s = String(v); return /^\d{8}$/.test(s) ? s.slice(0, 4) + '.' + s.slice(4, 6) + '.' + s.slice(6) : esc(s); }
+function hhmm(iso) { const d = new Date(iso); return isNaN(d) ? esc(iso) : d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }); }
+function isPlainObj(v) { return v && typeof v === 'object' && !Array.isArray(v); }
+function isScalar(v) { return v == null || ['string', 'number', 'boolean'].includes(typeof v); }
+function label(k) { return LABELS[k] || k; }
+function readable(p) { try { return decodeURIComponent(p); } catch (e) { return p; } }
+
+function fmt(k, v, row, op) {
+  if (op && op.fmt && op.fmt[k]) return op.fmt[k](v, row);
+  if (v == null || v === '') return '<span class="muted">–</span>';
+  if (k === 'imageUrl') return `<img class="thumb" src="${esc(v)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`;
+  if (PRICE_KEYS.has(k)) return (k === 'originPrice' || k === 'originalPrice') && num(v) === 0 ? '<span class="muted">–</span>' : won(v);
+  if (k === 'distanceMeters' || k === 'distanceM') return meters(v);
+  if (k === 'distanceKm' || k === 'distance') return km(v);
+  if (k === 'remainingSeats' && row && num(row.totalSeats)) {
+    const rem = num(v), tot = num(row.totalSeats), pct = Math.max(0, Math.min(100, rem / tot * 100));
+    if (rem === 0) return '<span class="badge crit">매진</span>';
+    return `<span class="seat"><span>${rem.toLocaleString('ko-KR')} / ${tot.toLocaleString('ko-KR')}</span><span class="meter" title="잔여 ${Math.round(pct)}%"><span style="width:${pct.toFixed(1)}%"></span></span></span>`;
+  }
+  if (k === 'soldOut' || k === 'isSoldOut') return v ? '<span class="badge crit">품절</span>' : '<span class="muted">판매중</span>';
+  if (k === 'inStock') return v ? '<span class="badge good">있음</span>' : '<span class="badge crit">없음</span>';
+  if (k === 'stockStatus') return v === 'in_stock' ? '<span class="badge good">재고 있음</span>' : `<span class="badge${/out|sold/.test(v) ? ' crit' : ''}">${esc(STOCK_STATUS[v] || v)}</span>`;
+  if (k === 'options' && isPlainObj(v)) {
+    const on = Object.entries(v).filter(([, x]) => x === true).map(([o]) => `<span class="badge">${esc(OPTION_LABELS[o] || o)}</span>`);
+    return on.length ? on.join('') : '<span class="muted">–</span>';
+  }
+  if (k === 'storeInventory' && isPlainObj(v)) return `재고 ${esc(v.inStockCount ?? '?')} / ${esc(v.totalCount ?? '?')}곳`;
+  if (k === 'link') return `<a href="${esc(v)}" target="_blank" rel="noopener noreferrer">열기</a>`;
+  if (k === 'playDate' || k === 'tradeDate') return ymd(v);
+  if ((k === 'openTime' || k === 'closeTime') && /^\d{4}$/.test(String(v))) return String(v).slice(0, 2) + ':' + String(v).slice(2);
+  if (k === 'fetchedAt' || k === 'createdAt') return hhmm(v);
+  if (k === 'productCode' && FUEL[v]) return esc(FUEL[v]);
+  if (k === 'discountRate') return esc(v) + '%';
+  if (k === 'durationMinutes') return esc(v) + '분';
+  if (k === 'diff') { const n = num(v); if (n == null) return esc(v); return n > 0 ? `<span class="delta-up">▲${Math.abs(n).toFixed(2)}</span>` : n < 0 ? `<span class="delta-down">▼${Math.abs(n).toFixed(2)}</span>` : '0'; }
+  if (k === 'service') return esc(SVC_NAME[v] || v);
+  if (typeof v === 'boolean') return v ? '<span class="yes">✓</span>' : '<span class="muted">–</span>';
+  if (typeof v === 'number') return v.toLocaleString('ko-KR');
+  if (typeof v === 'object') return `<span class="muted">${esc(clip(JSON.stringify(v), 80))}</span>`;
+  if (k === 'message') return esc(clip(stripHtml(v), 220));
+  return esc(clip(v, 300));
+}
+function isNumCol(k) { return PRICE_KEYS.has(k) || /^(distance|quantity|stockQuantity|realStockQuantity|o2oRemainQuantity|remainQuantity|count|totalSeats|bookedSeats|discountRate|diff|durationMinutes)/.test(k); }
+
+// ---------- 위치 ----------
+function setLoc(loc, save = true) {
+  state.loc = loc;
+  if (save) store.set('loc', loc);
+  const t = document.getElementById('kpiLoc');
+  t.querySelector('.kpi-value').textContent = loc.label || '직접 입력';
+  t.querySelector('.kpi-sub').textContent = `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`;
+  document.getElementById('locLat').value = loc.lat;
+  document.getElementById('locLng').value = loc.lng;
+  const sel = document.getElementById('locPreset');
+  const idx = LOC_PRESETS.findIndex(p => p[0] === loc.label);
+  sel.value = idx >= 0 ? String(idx) : 'custom';
+  document.querySelectorAll('[data-loc-text]').forEach(el => { el.textContent = locText(); });
+}
+function locText() { return `${state.loc.label || '직접 입력'} · ${state.loc.lat.toFixed(4)}, ${state.loc.lng.toFixed(4)}`; }
+function initLoc() {
+  const sel = document.getElementById('locPreset');
+  sel.innerHTML = LOC_PRESETS.map((p, i) => `<option value="${i}">${esc(p[0])}</option>`).join('') + '<option value="custom">직접 입력 / 내 위치</option>';
+  sel.addEventListener('change', () => {
+    if (sel.value === 'custom') return;
+    const p = LOC_PRESETS[Number(sel.value)];
+    setLoc({ label: p[0], lat: p[1], lng: p[2] });
+    msg('');
+  });
+  document.getElementById('locApply').addEventListener('click', () => {
+    const lat = Number(document.getElementById('locLat').value), lng = Number(document.getElementById('locLng').value);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) { msg('위도·경도를 확인하세요.'); return; }
+    setLoc({ label: '직접 입력', lat, lng }); msg('기준 위치를 적용했습니다.');
+  });
+  document.getElementById('locGeo').addEventListener('click', () => {
+    if (!navigator.geolocation) { msg('이 브라우저는 위치 기능을 지원하지 않습니다.'); return; }
+    msg('현재 위치를 확인하는 중…');
+    navigator.geolocation.getCurrentPosition(
+      p => { setLoc({ label: '내 위치', lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) }); msg('현재 위치를 적용했습니다.'); },
+      e => msg('위치를 가져오지 못했습니다: ' + (e.code === 1 ? '권한이 거부됨' : e.message)),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+  });
+  const saved = store.get('loc');
+  setLoc(saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lng) ? saved : state.loc, false);
+  function msg(t) { document.getElementById('locMsg').textContent = t || '"기준 위치 사용"이 켜진 조회에 위도·경도로 전달됩니다.'; }
+}
+
+// ---------- 내비게이션 ----------
+function renderNav() {
+  const groups = [...new Set(SERVICES.map(s => s.group))];
+  document.getElementById('nav').innerHTML = groups.map(g =>
+    `<div class="nav-group">${esc(g)}</div>` + SERVICES.filter(s => s.group === g).map(s =>
+      `<button type="button" class="nav-item" data-svc="${s.id}"><span>${esc(s.name)}</span><span class="cnt">${s.ops.length}</span></button>`).join('')).join('');
+  document.getElementById('navSelect').innerHTML = groups.map(g =>
+    `<optgroup label="${esc(g)}">` + SERVICES.filter(s => s.group === g).flatMap(s => s.ops.map(op =>
+      `<option value="${op.id}">${esc(s.name)} · ${esc(op.label)}</option>`)).join('') + '</optgroup>').join('');
+}
+function syncNav() {
+  const { svc } = OPS[state.opId];
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.svc === svc.id));
+  document.getElementById('navSelect').value = state.opId;
+}
+
+function defaultsFor(op, preset) {
+  const v = {};
+  op.fields.forEach(f => {
+    if (preset && Object.prototype.hasOwnProperty.call(preset, f.name)) v[f.name] = preset[f.name];
+    else if (preset && (f.type === 'text' || f.type === 'textarea')) v[f.name] = '';
+    else v[f.name] = Array.isArray(f.default) ? f.default.slice() : (f.default ?? (f.type === 'bool' ? false : ''));
+  });
+  return v;
+}
+
+function go(opId, preset, autorun) {
+  if (!OPS[opId]) opId = 'daiso-products';
+  const { op } = OPS[opId];
+  if (preset || !state.values[opId]) state.values[opId] = defaultsFor(op, preset);
+  state.opId = opId;
+  store.set('op', opId);
+  if (location.hash !== '#' + opId) history.replaceState(null, '', '#' + opId);
+  renderOp();
+  renderResult();
+  syncNav();
+  if (autorun) { run(opId); document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+}
+
+// ---------- 폼 ----------
+function renderOp() {
+  const { svc, op } = OPS[state.opId];
+  const vals = state.values[op.id];
+  const tabs = svc.ops.length > 1 ? `<div class="tabs" role="tablist">${svc.ops.map(o =>
+    `<button type="button" role="tab" class="tab${o.id === op.id ? ' active' : ''}" aria-selected="${o.id === op.id}" data-op="${o.id}">${esc(o.label)}</button>`).join('')}</div>` : '';
+  const fields = op.fields.map(f => {
+    const v = vals[f.name];
+    const id = 'f_' + f.name;
+    const req = f.required ? ' <span class="req">*</span>' : '';
+    const hint = f.hint ? `<span class="hint">${esc(f.hint)}</span>` : '';
+    const wide = f.wide || f.type === 'textarea' || f.type === 'multi' ? ' wide' : '';
+    if (f.type === 'bool') return `<div class="field"><span class="flabel">&nbsp;</span><label class="check"><input type="checkbox" id="${id}" data-f="${f.name}"${v ? ' checked' : ''}> ${esc(f.label)}</label>${hint}</div>`;
+    if (f.type === 'loc') return `<div class="field"><span class="flabel">위치</span><label class="check"><input type="checkbox" id="${id}" data-f="${f.name}"${v ? ' checked' : ''}> 기준 위치 사용</label><span class="hint" data-loc-text>${esc(locText())}</span></div>`;
+    if (f.type === 'multi') return `<div class="field${wide}"><span class="flabel">${esc(f.label)}</span><div class="checks">${f.options.map(([ov, ol]) =>
+      `<label class="check"><input type="checkbox" data-f="${f.name}" data-v="${esc(ov)}"${(v || []).includes(ov) ? ' checked' : ''}> ${esc(ol)}</label>`).join('')}</div></div>`;
+    let ctl;
+    if (f.type === 'select') ctl = `<select id="${id}" data-f="${f.name}">${f.options.map(([ov, ol]) => `<option value="${esc(ov)}"${String(v) === String(ov) ? ' selected' : ''}>${esc(ol)}</option>`).join('')}</select>`;
+    else if (f.type === 'textarea') ctl = `<textarea id="${id}" data-f="${f.name}">${esc(v)}</textarea>`;
+    else if (f.type === 'date') ctl = `<input type="date" id="${id}" data-f="${f.name}" value="${esc(v)}">`;
+    else ctl = `<input type="${f.type === 'number' ? 'number' : 'text'}" id="${id}" data-f="${f.name}" value="${esc(v)}"${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''}${f.required ? ' required' : ''}>`;
+    return `<div class="field${wide}"><label for="${id}">${esc(f.label)}${req}</label>${ctl}${hint}</div>`;
+  }).join('');
+  document.getElementById('opPanel').innerHTML = `
+    <div class="svc-head"><h2>${esc(svc.name)}</h2><p>${esc(svc.desc)}</p></div>
+    ${tabs}
+    ${op.note ? `<div class="op-note">${esc(op.note)}</div>` : ''}
+    <form id="opForm" novalidate>
+      ${fields ? `<div class="form-grid">${fields}</div>` : '<div class="muted" style="font-size:13px">입력 항목이 없습니다.</div>'}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">${esc(op.submitLabel || '조회')}</button>
+        <button type="button" class="btn" data-reset>기본값</button>
+        <span class="spacer"></span>
+        <span class="reqline">${esc(op.method || 'GET')} ${esc(op.path)}</span>
+      </div>
+    </form>`;
+}
+function readForm() {
+  const { op } = OPS[state.opId];
+  const vals = state.values[op.id];
+  const form = document.getElementById('opForm');
+  op.fields.forEach(f => {
+    if (f.type === 'multi') vals[f.name] = [...form.querySelectorAll(`[data-f="${f.name}"]`)].filter(i => i.checked).map(i => i.dataset.v);
+    else {
+      const el = form.querySelector(`[data-f="${f.name}"]`);
+      if (!el) return;
+      vals[f.name] = (f.type === 'bool' || f.type === 'loc') ? el.checked : el.value;
+    }
+  });
+}
+
+function buildRequest(op, vals) {
+  const params = {};
+  op.fields.forEach(f => {
+    const v = vals[f.name];
+    if (f.type === 'loc') { if (v) { params.lat = state.loc.lat; params.lng = state.loc.lng; } return; }
+    if (f.type === 'bool') { params[f.name] = v ? 'true' : 'false'; return; }
+    if (f.type === 'multi') { if (v && v.length) params[f.name] = v.join(','); return; }
+    if (f.type === 'date') { if (v) params[f.name] = String(v).replace(/-/g, ''); return; }
+    const s = String(v ?? '').trim();
+    if (s !== '') params[f.name] = s;
+  });
+  if (op.preferText && params[op.preferText]) { delete params.lat; delete params.lng; }
+  let path = op.path.replace(/\{(\w+)\}/g, (_, k) => { const x = params[k]; delete params[k]; return encodeURIComponent(x ?? ''); });
+  const method = op.method || 'GET';
+  if (method === 'GET') {
+    const qs = new URLSearchParams(params).toString();
+    return { method, path: path + (qs ? '?' + qs : ''), url: API + path + (qs ? '?' + qs : ''), params };
+  }
+  const body = { ...params, ...(op.fixed || {}) };
+  return { method, path, url: API + path, params, body: JSON.stringify(body) };
+}
+
+// ---------- 호출 ----------
+async function run(opId) {
+  const { op } = OPS[opId];
+  const vals = state.values[opId];
+  if (state.running[opId]) return;
+  const missing = op.fields.filter(f => f.required && !String(vals[f.name] ?? '').trim());
+  if (missing.length) { state.results[opId] = { invalid: missing.map(f => f.label) }; if (state.opId === opId) renderResult(); return; }
+  if (op.confirm && !window.confirm(op.confirm)) return;
+  const req = buildRequest(op, vals);
+  const ctrl = new AbortController();
+  const started = performance.now();
+  state.running[opId] = { ctrl, started, req };
+  if (state.opId === opId) renderResult();
+  const limit = op.timeout || 45000;
+  const timer = setTimeout(() => ctrl.abort('timeout'), limit);
+  let out;
+  try {
+    const res = await fetch(req.url, { method: req.method, headers: req.body ? { 'Content-Type': 'application/json' } : undefined, body: req.body, signal: ctrl.signal });
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch (e) { /* JSON 아님 */ }
+    out = { status: res.status, json, text, ms: performance.now() - started, req, params: req.params };
+  } catch (e) {
+    const why = ctrl.signal.aborted ? (ctrl.signal.reason === 'cancel' ? 'cancel' : 'timeout') : 'network';
+    out = { status: 0, netError: why, message: String((e && e.message) || e), ms: performance.now() - started, req, params: req.params, limit };
+  }
+  clearTimeout(timer);
+  delete state.running[opId];
+  if (out.netError !== 'cancel') {
+    state.stats.calls++;
+    if (!(out.json && out.json.success)) state.stats.fails++;
+    updateApiTile();
+  }
+  state.results[opId] = out;
+  if (state.opId === opId) renderResult();
+}
+
+// ---------- 결과 렌더링 ----------
+let tickTimer = null;
+function renderResult() {
+  const el = document.getElementById('result');
+  clearInterval(tickTimer);
+  REG = []; TABLES = {};
+  const id = state.opId;
+  const { op } = OPS[id];
+  const running = state.running[id];
+  if (running) {
+    el.innerHTML = `<div class="state"><div class="spinner"></div><div class="big">조회 중… <span id="elapsed">0</span>초</div>
+      <div class="reqline" style="margin:6px 0 12px">${esc(running.req.method)} ${esc(readable(running.req.path))}</div>
+      <button type="button" class="btn btn-sm" data-cancel>취소</button></div>`;
+    tickTimer = setInterval(() => { const e = document.getElementById('elapsed'); if (e) e.textContent = ((performance.now() - running.started) / 1000).toFixed(0); }, 500);
+    return;
+  }
+  const out = state.results[id];
+  if (!out) {
+    el.innerHTML = `<div class="state"><div class="big">${esc(op.submitLabel || '조회')} 버튼을 누르면 결과가 여기에 표시됩니다</div><div>기본값으로 채워져 있어 바로 조회할 수 있습니다.</div></div>`;
+    return;
+  }
+  if (out.invalid) {
+    el.innerHTML = `<div class="warnbox">필수 항목을 입력하세요: <b>${out.invalid.map(esc).join(', ')}</b></div>`;
+    return;
+  }
+  const ok = out.json && out.json.success === true;
+  const head = `<div class="res-head">
+    <span class="pill ${ok ? 'ok' : 'err'}">${ok ? '✓ 성공' : '✕ 실패'}</span>
+    <span>${out.status ? 'HTTP ' + out.status : '응답 없음'} · ${out.ms < 100 ? '0.1초 미만(캐시)' : (out.ms / 1000).toFixed(1) + '초'}</span>
+    <span class="reqline">${esc(out.req.method)} ${esc(readable(out.req.path))}</span>
+    ${out.req.method === 'GET' ? `<a href="${esc(out.req.url)}" target="_blank" rel="noopener" style="font-size:12px">원본 열기</a>` : ''}
+  </div>`;
+  const body = ok ? renderData(out.json.data, op, out.params, out.json.meta, true) : renderError(out);
+  const raw = out.json ? JSON.stringify(out.json, null, 2) : (out.text || out.message || '');
+  el.innerHTML = head + body + (raw ? `<details class="raw"><summary>원본 JSON 보기 (${raw.length.toLocaleString('ko-KR')}자)</summary><pre>${esc(clip(raw, 200000))}</pre></details>` : '');
+}
+
+function explain(msgText, code, status) {
+  const m = msgText || '';
+  if (status === 429 || code === 'DAILY_RATE_LIMIT_EXCEEDED') return '이 IP의 오늘 호출 한도(3,000회)를 넘었습니다. 한국 시간 자정 이후 다시 시도하세요.';
+  if (/Zyte/.test(m)) return 'daiso-mcp 서버가 이 기능에 필요한 유료 우회 호출을 꺼 두었습니다. 현재 공개 서버에서는 이 기능을 쓸 수 없습니다.';
+  if (/API_KEY|인증을 사용할 수 없습니다/.test(m)) return 'daiso-mcp 운영 서버에 이 기능용 API 키가 설정되어 있지 않습니다. 운영자 설정 문제라 이 앱에서 해결할 수 없습니다.';
+  if (/403|Forbidden|HTML 응답|JSON 대신 HTML/i.test(m)) return '해당 브랜드 사이트가 daiso-mcp 서버의 요청을 차단했습니다. 이 앱의 문제가 아니라 외부 차단이며, 시간이 지나면 복구될 수 있습니다.';
+  if (/시간 초과|timeout|aborted/i.test(m)) return '외부 사이트의 응답이 늦어 서버가 요청을 중단했습니다. 잠시 후 다시 시도하세요.';
+  if (status === 400) return '입력값을 확인하세요.';
+  return '';
+}
+function renderError(out) {
+  if (out.netError) {
+    const t = out.netError === 'timeout' ? `응답 대기 시간(${Math.round(out.limit / 1000)}초)을 넘겨 요청을 중단했습니다.`
+      : out.netError === 'cancel' ? '요청을 취소했습니다.' : '서버에 연결하지 못했습니다. 인터넷 연결을 확인하세요.';
+    return `<div class="errbox"><div class="etitle">${out.netError === 'cancel' ? '취소됨' : '네트워크 오류'}</div><div class="emsg">${esc(t)}</div>
+      ${out.netError !== 'cancel' ? `<div class="ehint">${esc(out.message)}</div>` : ''}</div>${retryBtn()}`;
+  }
+  if (!out.json) return `<div class="errbox"><div class="etitle">JSON이 아닌 응답 (HTTP ${out.status})</div><div class="emsg">${esc(clip(stripHtml(out.text), 300))}</div></div>${retryBtn()}`;
+  const e = out.json.error || {}, d = out.json.diagnostics || {};
+  const m = stripHtml(e.message || d.message || '알 수 없는 오류');
+  const why = explain(m, e.code, out.status);
+  return `<div class="errbox">
+    <div class="etitle">${esc(e.code || '오류')}</div>
+    <div class="emsg">${esc(clip(m, 280))}</div>
+    ${why ? `<div class="ewhy">${esc(why)}</div>` : ''}
+    ${d.hint && d.hint !== m ? `<div class="ehint">힌트: ${esc(d.hint)}</div>` : ''}
+  </div>${d.retryable !== false ? retryBtn() : ''}`;
+}
+function retryBtn() { return '<div style="margin-bottom:12px"><button type="button" class="btn btn-sm" data-retry>다시 시도</button></div>'; }
+
+function findArrays(obj, path = '', depth = 0, out = []) {
+  if (!isPlainObj(obj) || depth > 2) return out;
+  for (const [k, v] of Object.entries(obj)) {
+    if (HIDE_TREE.has(k)) continue;
+    const p = path ? path + '.' + k : k;
+    if (Array.isArray(v)) out.push({ path: p, key: k, rows: v });
+    else if (isPlainObj(v)) findArrays(v, p, depth + 1, out);
+  }
+  return out;
+}
+function nameOf(o) { for (const k of NAME_KEYS) if (o && typeof o[k] === 'string' && o[k]) return o[k]; return null; }
+
+function renderData(data, op, params, meta, top) {
+  if (!isPlainObj(data)) {
+    if (Array.isArray(data)) return renderList({ path: 'items', key: 'items', rows: data }, op, data, params, top);
+    return `<div class="notebox">${esc(data)}</div>`;
+  }
+  let html = '';
+  // 요약 칩
+  const chips = [];
+  for (const [k, v] of Object.entries(data)) {
+    if (SUMMARY_KEYS.has(k) && isScalar(v) && v !== null && !(k === 'filterRelaxed' && !v)) chips.push([label(k), k === 'filterRelaxed' ? '예' : fmtPlain(k, v)]);
+    else if (isPlainObj(v) && CONTAINER_LABELS[k]) {
+      for (const [k2, v2] of Object.entries(v)) if (SUMMARY_KEYS.has(k2) && isScalar(v2) && v2 !== null) chips.push([CONTAINER_LABELS[k] + ' · ' + label(k2), fmtPlain(k2, v2)]);
+    }
+  }
+  if (top && meta && meta.total != null && !('totalCount' in data)) chips.unshift(['전체', Number(meta.total).toLocaleString('ko-KR')]);
+  if (chips.length) html += `<div class="chips">${chips.map(([l, v]) => `<span class="chip">${esc(l)}<b>${esc(v)}</b></span>`).join('')}</div>`;
+  // 안내 문구
+  const notes = [];
+  const collectNotes = (o, depth) => { for (const [k, v] of Object.entries(o)) { if (NOTE_KEYS.has(k) && typeof v === 'string' && v.trim()) notes.push(stripHtml(v)); else if (depth < 1 && isPlainObj(v) && !HIDE_TREE.has(k)) collectNotes(v, depth + 1); } };
+  collectNotes(data, 0);
+  notes.forEach(n => { html += `<div class="notebox">${esc(clip(n, 400))}</div>`; });
+  // 엔터티 카드 (상품, 주유소, 선택된 극장, 최저가 등)
+  let entityCount = 0;
+  for (const [k, v] of Object.entries(data)) {
+    if (isPlainObj(v) && !HIDE_TREE.has(k) && nameOf(v)) { html += entityCard(v, k, op); entityCount++; }
+  }
+  // 목록
+  let arrays = findArrays(data);
+  if (op.order) arrays.sort((a, b) => rank(a.path) - rank(b.path));
+  function rank(p) { const i = op.order.indexOf(p); return i < 0 ? 99 : i; }
+  const nonEmpty = arrays.filter(a => a.rows.length);
+  const empty = arrays.filter(a => !a.rows.length);
+  nonEmpty.forEach(a => { html += renderList(a, op, data, params, top); });
+  if (nonEmpty.length && empty.length) html += `<div class="empty-line">결과 없음: ${empty.map(a => esc(LIST_TITLES[a.path] || LIST_TITLES[a.key] || a.key)).join(', ')}</div>`;
+  if (!nonEmpty.length && !entityCount) {
+    if (arrays.length) html += `<div class="state"><div class="big">조건에 맞는 결과가 없습니다</div><div>검색어나 위치, 날짜를 바꿔 다시 조회해 보세요.</div></div>`;
+    else if (top || nameOf(data)) html += entityCard(data, null, op);
+  }
+  return html;
+}
+function fmtPlain(k, v) {
+  if (k === 'playDate') return String(v).replace(/^(\d{4})(\d{2})(\d{2})$/, '$1.$2.$3');
+  if (k === 'fetchedAt') { const d = new Date(v); return isNaN(d) ? String(v) : d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }); }
+  if (typeof v === 'boolean') return v ? '예' : '아니오';
+  if (typeof v === 'number') return v.toLocaleString('ko-KR');
+  return String(v);
+}
+
+function entityCard(o, key, op) {
+  const ENT = { product: '상품', station: '주유소', resolvedTheater: '선택된 극장', bestPrice: '최저가 후보', selectedProduct: '선택된 상품', cinema: '영화관' };
+  const title = nameOf(o);
+  const rows = Object.entries(o).filter(([k, v]) => k !== 'imageUrl' && !(key === 'bestPrice' && (k === 'service' || k === 'serviceName')) && !NAME_KEYS.includes(k) && !HIDE_COLS.has(k) && k !== 'raw' && (isScalar(v) || k === 'options') && v !== '' && v != null);
+  const kicker = key === 'bestPrice' && o.serviceName ? `최저가 후보 · ${o.serviceName}` : (ENT[key] || (key ? label(key) : '상세 정보'));
+  return `<div class="entity${key === 'bestPrice' ? ' highlight' : ''}">
+    ${o.imageUrl ? `<img src="${esc(o.imageUrl)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}
+    <div style="min-width:0;flex:1">
+      <div class="ent-kicker">${esc(kicker)}</div>
+      ${title ? `<div class="ent-title">${esc(title)}</div>` : ''}
+      <dl class="kv">${rows.map(([k, v]) => `<dt>${esc(label(k))}</dt><dd>${fmt(k, v, o, op)}</dd>`).join('')}</dl>
+    </div></div>`;
+}
+
+function pickColumns(rows, op, path) {
+  if (op.columns && op.columns[path]) return op.columns[path];
+  const keys = [];
+  rows.slice(0, 20).forEach(r => { if (isPlainObj(r)) Object.keys(r).forEach(k => { if (!keys.includes(k)) keys.push(k); }); });
+  let cols = keys.filter(k => {
+    if (HIDE_COLS.has(k)) return false;
+    const vals = rows.slice(0, 20).map(r => r && r[k]);
+    if (vals.every(v => v == null || v === '')) return false;
+    return vals.every(v => isScalar(v)) || k === 'options' || k === 'storeInventory';
+  });
+  if (cols.includes('remainingSeats') && cols.includes('totalSeats')) cols = cols.filter(k => k !== 'totalSeats' && k !== 'bookedSeats');
+  if (cols.includes('roadAddress') && cols.includes('address')) cols = cols.filter(k => k !== 'address');
+  if (cols.includes('brandName')) cols = cols.filter(k => k !== 'brandCode');
+  if (cols.includes('distanceMeters') || cols.includes('distanceM')) cols = cols.filter(k => k !== 'distanceKm' && k !== 'distance');
+  const rank = k => { const i = PRIORITY.indexOf(k); return i < 0 ? 500 + keys.indexOf(k) : i; };
+  cols.sort((a, b) => rank(a) - rank(b));
+  return cols.slice(0, 9);
+}
+function hasNested(r) { return isPlainObj(r) && Object.entries(r).some(([k, v]) => !HIDE_TREE.has(k) && ((Array.isArray(v) && v.length) || (isPlainObj(v) && k !== 'storeInventory' && Object.keys(v).length))) || (isPlainObj(r) && isPlainObj(r.storeInventory) && Array.isArray(r.storeInventory.stores) && r.storeInventory.stores.length > 0); }
+function mapUrl(r) {
+  if (!isPlainObj(r)) return null;
+  const lat = num(r.latitude ?? r.lat), lng = num(r.longitude ?? r.lng);
+  const addr = r.roadAddress || r.address;
+  if (addr) return 'https://map.naver.com/p/search/' + encodeURIComponent(addr);
+  if (lat && lng) return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  return null;
+}
+
+function renderList(a, op, data, params, top) {
+  const title = (top && op.titles && op.titles[a.path]) || LIST_TITLES[a.path] || LIST_TITLES[a.key] || label(a.key);
+  if (a.rows.every(r => !isPlainObj(r))) {
+    const chipAct = top && op.chipAction;
+    const chips = a.rows.map(s => {
+      const text = a.key === 'playDates' ? fmtPlain('playDate', s) : a.key === 'services' ? (SVC_NAME[s] || String(s)) : String(s);
+      if (chipAct) { const i = REG.push({ kind: 'chip', value: s, data, params, op }) - 1; return `<button type="button" class="chip" data-reg="${i}" title="이 값으로 조회">${esc(text)}</button>`; }
+      return `<span class="chip">${esc(text)}</span>`;
+    }).join('');
+    return `<div class="list-block"><div class="list-title"><h3>${esc(title)}</h3><span class="count">${a.rows.length}건</span></div><div class="chips">${chips}</div></div>`;
+  }
+  const tid = 't' + Object.keys(TABLES).length;
+  TABLES[tid] = { rows: a.rows, path: a.path, op, data, params, top, cols: pickColumns(a.rows, op, a.path), sort: null, dir: 1, filter: '', showAll: false };
+  const filter = a.rows.length > 8 ? `<input type="search" placeholder="결과 내 검색" data-filter="${tid}" aria-label="${esc(title)} 결과 내 검색">` : '';
+  return `<div class="list-block"><div class="list-title"><h3>${esc(title)}</h3><span class="count" id="${tid}_cnt">${a.rows.length.toLocaleString('ko-KR')}건</span>${filter}</div>
+    <div id="${tid}">${tableHtml(tid)}</div></div>`;
+}
+
+function tableHtml(tid) {
+  const t = TABLES[tid];
+  const acts = (t.top && t.op.actions && t.op.actions[t.path]) || [];
+  let rows = t.rows.map((r, i) => ({ r, i }));
+  if (t.filter) {
+    const q = t.filter.toLowerCase();
+    rows = rows.filter(({ r }) => Object.values(r).some(v => isScalar(v) && v != null && String(v).toLowerCase().includes(q)));
+  }
+  if (t.sort) {
+    const k = t.sort;
+    rows.sort((x, y) => {
+      const a = x.r[k], b = y.r[k];
+      const na = num(a), nb = num(b);
+      if (na != null && nb != null) return (na - nb) * t.dir;
+      if (a == null) return 1; if (b == null) return -1;
+      return String(a).localeCompare(String(b), 'ko') * t.dir;
+    });
+  }
+  const cnt = document.getElementById(tid + '_cnt');
+  if (cnt) cnt.textContent = t.filter ? `${rows.length.toLocaleString('ko-KR')} / ${t.rows.length.toLocaleString('ko-KR')}건` : `${t.rows.length.toLocaleString('ko-KR')}건`;
+  const LIMIT = 30;
+  const shown = t.showAll ? rows : rows.slice(0, LIMIT);
+  const anyMap = t.rows.some(mapUrl), anyNested = t.rows.some(hasNested);
+  const hasActCol = acts.length || anyMap || anyNested;
+  const colSpan = t.cols.length + (hasActCol ? 1 : 0);
+  const th = t.cols.map(k => `<th class="${isNumCol(k) ? 'num' : ''}${k === 'imageUrl' ? ' noclick' : ''}" ${k === 'imageUrl' ? '' : `data-sort="${tid}" data-key="${esc(k)}"`}>${k === 'imageUrl' ? '' : esc(label(k))}${t.sort === k ? `<span class="arrow">${t.dir > 0 ? '▲' : '▼'}</span>` : ''}</th>`).join('') + (hasActCol ? '<th class="noclick"></th>' : '');
+  const body = shown.map(({ r, i }) => {
+    const reg = REG.push({ kind: 'row', row: r, tid, idx: i }) - 1;
+    const tds = t.cols.map(k => `<td class="${isNumCol(k) ? 'num' : ''}${/^(address|roadAddress|addressDetail|message|name|goodsName|goodsNm|productName|itemName|movieName|title|description|category)$/.test(k) ? ' wrap-text' : ''}">${fmt(k, r[k], r, t.op)}</td>`).join('');
+    let act = '';
+    if (hasActCol) {
+      act = acts.map((a, j) => `<button type="button" class="btn btn-sm" data-reg="${reg}" data-act="${j}">${esc(a.label)}</button>`).join('');
+      const mu = mapUrl(r);
+      if (mu) act += `<a class="btn btn-sm" href="${esc(mu)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit">지도</a> `;
+      if (hasNested(r)) act += `<button type="button" class="btn btn-sm" data-reg="${reg}" data-expand>펼치기</button>`;
+      act = `<td class="acts">${act}</td>`;
+    }
+    return `<tr id="row${reg}">${tds}${act}</tr>`;
+  }).join('');
+  const more = rows.length > LIMIT && !t.showAll ? `<div class="more"><button type="button" class="btn btn-sm" data-more="${tid}">전체 ${rows.length.toLocaleString('ko-KR')}건 보기</button></div>` : '';
+  return `<div class="tbl-wrap"><table data-cols="${colSpan}"><thead><tr>${th}</tr></thead><tbody>${body || `<tr><td colspan="${colSpan}" class="muted">일치하는 결과가 없습니다</td></tr>`}</tbody></table></div>${more}`;
+}
+
+// ---------- 이벤트 ----------
+document.addEventListener('click', e => {
+  const t = e.target.closest('button, [data-sort]');
+  if (!t) return;
+  if (t.matches('.nav-item')) { const s = SERVICES.find(x => x.id === t.dataset.svc); go(s.ops[0].id); return; }
+  if (t.matches('.tab')) { go(t.dataset.op); return; }
+  if (t.hasAttribute('data-reset')) { state.values[state.opId] = defaultsFor(OPS[state.opId].op); renderOp(); return; }
+  if (t.hasAttribute('data-cancel')) { const r = state.running[state.opId]; if (r) r.ctrl.abort('cancel'); return; }
+  if (t.hasAttribute('data-retry')) { run(state.opId); return; }
+  if (t.dataset.fuel) { go('opinet-lowest', { fuelCode: t.dataset.fuel, areaCode: '', count: 10 }, true); return; }
+  if (t.dataset.more) { TABLES[t.dataset.more].showAll = true; document.getElementById(t.dataset.more).innerHTML = tableHtml(t.dataset.more); return; }
+  if (t.dataset.sort) {
+    const tb = TABLES[t.dataset.sort], k = t.dataset.key;
+    if (tb.sort === k) tb.dir = -tb.dir; else { tb.sort = k; tb.dir = 1; }
+    document.getElementById(t.dataset.sort).innerHTML = tableHtml(t.dataset.sort);
+    return;
+  }
+  if (t.dataset.reg != null) {
+    const r = REG[Number(t.dataset.reg)];
+    if (!r) return;
+    if (r.kind === 'chip') { const ca = r.op.chipAction; go(ca.to, ca.map(r.value, r.data, r.params), true); return; }
+    const tb = TABLES[r.tid];
+    if (t.hasAttribute('data-expand')) {
+      const tr = document.getElementById('row' + t.dataset.reg);
+      const next = tr.nextElementSibling;
+      if (next && next.classList.contains('sub')) { next.remove(); t.textContent = '펼치기'; return; }
+      const sub = document.createElement('tr');
+      sub.className = 'sub';
+      sub.innerHTML = `<td colspan="${tr.closest('table').dataset.cols}">${renderData(r.row, tb.op, tb.params, null, false)}</td>`;
+      tr.after(sub);
+      t.textContent = '접기';
+      return;
+    }
+    if (t.dataset.act != null) {
+      const a = tb.op.actions[tb.path][Number(t.dataset.act)];
+      go(a.to, a.map(r.row, tb.data, tb.params || {}), true);
+    }
+  }
+});
+document.addEventListener('input', e => {
+  const f = e.target.dataset && e.target.dataset.filter;
+  if (f && TABLES[f]) { TABLES[f].filter = e.target.value.trim(); TABLES[f].showAll = false; document.getElementById(f).innerHTML = tableHtml(f); }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'opForm') return;
+  e.preventDefault();
+  readForm();
+  run(state.opId);
+});
+document.addEventListener('change', e => { if (e.target.closest && e.target.closest('#opForm')) readForm(); });
+document.getElementById('navSelect').addEventListener('change', e => go(e.target.value));
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (OPS[h] && h !== state.opId) go(h); });
+
+// ---------- 테마 ----------
+(function initTheme() {
+  const btn = document.getElementById('themeBtn');
+  const apply = t => { if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; btn.textContent = isDark() ? '라이트 모드' : '다크 모드'; };
+  const isDark = () => document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  apply(store.get('theme'));
+  btn.addEventListener('click', () => { const t = isDark() ? 'light' : 'dark'; store.set('theme', t); apply(t); });
+})();
+
+// ---------- KPI ----------
+function updateApiTile() {
+  const t = document.getElementById('kpiApi');
+  const h = state.health;
+  const v = t.querySelector('.kpi-value'), s = t.querySelector('.kpi-sub');
+  if (h) v.innerHTML = h.ok ? '<span class="yes">✓</span> 정상' : '<span style="color:var(--critical-text)">✕</span> 응답 없음';
+  const parts = [];
+  if (h && h.ms != null) parts.push(`응답 ${(h.ms / 1000).toFixed(1)}초`);
+  parts.push(`이번 세션 호출 ${state.stats.calls}회` + (state.stats.fails ? ` · 실패 ${state.stats.fails}` : ''));
+  s.textContent = parts.join(' · ');
+}
+async function loadKpis() {
+  const t0 = performance.now();
+  fetch(API + '/health', { signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined })
+    .then(r => r.json()).then(j => { state.health = { ok: j.status === 'ok', ms: performance.now() - t0 }; })
+    .catch(() => { state.health = { ok: false }; })
+    .finally(updateApiTile);
+  const tiles = document.querySelectorAll('[data-fuel]');
+  try {
+    const r = await fetch(API + '/api/opinet/average', { signal: AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined });
+    const j = await r.json();
+    if (!j.success) throw new Error((j.error && j.error.message) || '조회 실패');
+    const by = {};
+    j.data.prices.forEach(p => { by[p.productCode] = p; });
+    tiles.forEach(tile => {
+      const p = by[tile.dataset.fuel];
+      if (!p) { tile.querySelector('.kpi-sub').textContent = '데이터 없음'; return; }
+      tile.querySelector('.kpi-value').innerHTML = `${Math.round(p.price).toLocaleString('ko-KR')}<small>원/L</small>`;
+      const d = num(p.diff);
+      const dh = d == null ? '' : d > 0 ? `<span class="delta-up">▲ ${Math.abs(d).toFixed(2)}원</span>` : d < 0 ? `<span class="delta-down">▼ ${Math.abs(d).toFixed(2)}원</span>` : '변동 없음';
+      tile.querySelector('.kpi-sub').innerHTML = `전일 대비 ${dh} · ${ymd(p.tradeDate).slice(5)} 기준`;
+      tile.title = `${p.productName} 전국 평균 ${p.price}원/L · 클릭하면 최저가 주유소 조회`;
+    });
+  } catch (e) {
+    tiles.forEach(tile => { tile.querySelector('.kpi-sub').textContent = '유가 정보를 불러오지 못했습니다'; });
+  }
+}
+
+// ---------- 시작 ----------
+renderNav();
+initLoc();
+updateApiTile();
+const startOp = OPS[location.hash.slice(1)] ? location.hash.slice(1) : (OPS[store.get('op')] ? store.get('op') : 'daiso-products');
+go(startOp);
+loadKpis();
+</script>
+</body>
+</html>
